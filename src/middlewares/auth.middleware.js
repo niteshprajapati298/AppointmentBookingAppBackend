@@ -52,5 +52,4 @@ module.exports.authDoctor = async (req, res, next) => {
         console.error('Authentication Middleware Error:', error);
         return res.status(500).json({ message: 'Internal Server Error' });
     }
-
 }

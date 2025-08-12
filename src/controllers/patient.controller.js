@@ -8,8 +8,8 @@ module.exports.registerPatient = async (req, res, next) => {
         const isPatiendAlreadyExists = await PatiendModel.findOne({ email: email });
         if (isPatiendAlreadyExists) return res.status(400).json("Email Id is already registerd with an account");
         const patient = await createPatient(firstName, lastName, gender, email, password, contactNumber);
-        const token = await PatiendModel.getJwt();
-        req.cookies('token',token)
+        const token = await patient.getJwt();
+        res.cookie('token',token);
         return res.status(201).json({ token: token }, patient)
     } catch (error) {
         res.status(401).json(error.message)
@@ -21,10 +21,10 @@ module.exports.loginPatient = async (req, res, next) => {
         if(!email||!password) return res.status(401).json("All Field are Required");
         const patient = await PatiendModel.findOne({ email: email }).select('+password');
         if (!patient) return res.status(401).json("Invalid Credentials");
-        const ishashPassword = await PatiendModel.validatePassword(password);
+        const ishashPassword = await patient.validatePassword(password);
         if (!ishashPassword) return res.status(401).json("Invalid Credentials");
-        const token = await PatiendModel.getJwt();
-        req.cookies('token',token)
+        const token = await patient.getJwt();
+        res.cookie('token',token)
         return res.status(201).json(patient, token);
     } catch (error) {
         return res.status(401).json(error.message)

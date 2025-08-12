@@ -1,5 +1,9 @@
+
 const express = require('express');
-const { registerPatient, loginPatient } = require('../controllers/patient.controller');
+const { registerDoctor, loginDoctor, getDoctorProfile } = require('../controllers/doctor.controller');
+const { authDoctor } = require('../middlewares/auth.middleware');
 const router = express.Router();
-router.post('/signup',registerPatient);
-router.post('/login',loginPatient);
+router.post('/signup',registerDoctor);
+router.post('/login',loginDoctor);
+router.get('/profileView',authDoctor,getDoctorProfile);
+module.exports=router;
