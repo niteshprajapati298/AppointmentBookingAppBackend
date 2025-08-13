@@ -41,3 +41,37 @@ module.exports.getDoctorProfile = async (req,res,next)=>{
         return res.status(404).json(error.message,"Internal Server Error")
     }
 }
+module.exports.logoutDoctor = async (req,res,next) => {
+    try {
+        const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+        if(!token) return res.status(401).json("Token Not Found Please LogIn");
+        res.clearCookie("token",token);
+        res.status(201).json({message:"Logged Out Successfully"})
+    } catch (error) {
+        res.status(401).json("Internal Server Error");
+    }
+}
+module.exports.getDoctors = async (req, res) => {
+    try {
+      const id = req.params.id;
+  
+      if (id) {
+        const doctor = await DoctorModel.findById(id);
+        if (!doctor) {
+          return res.status(404).json({ message: "Doctor not found" });
+        }
+        return res.status(200).json(doctor);
+      } else {
+        const doctors = await DoctorModel.find();
+        return res.status(200).json(doctors);
+      }
+  
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };
+
+module.exports.getDoctorsBySpeciality = async (req,res,next) => {
+    
+}
+  

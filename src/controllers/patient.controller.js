@@ -1,3 +1,4 @@
+const DoctorModel = require("../models/doctor.model");
 const PatiendModel = require("../models/patient.model");
 const { createPatient } = require("../services/patient.service");
 
@@ -39,3 +40,14 @@ module.exports.getPatientProfile = async (req,res,next) => {
         return res.status(401).json("Internal server Error");
     }
 }
+module.exports.logoutPatient = async (req,res,next) => {
+    try {
+        const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+        if(!token) return res.status(401).json("Token Not Found Please LogIn");
+        res.clearCookie("token",token);
+        res.status(201).json({message:"Logged Out Successfully"})
+    } catch (error) {
+        res.status(401).json("Internal Server Error");
+    }
+}
+

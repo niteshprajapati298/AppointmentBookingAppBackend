@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const jwt = require('jsonwebtoken')
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt');
+const { generateWeeklyAvalability } = require("../utils/generateWeeklyAvailability");
 
 const doctorSchema = new mongoose.Schema(
     {
@@ -38,24 +39,33 @@ const doctorSchema = new mongoose.Schema(
         },
         availability: [
             {
-                day: String,
+              day: {
+                type: String,
                 enum: [
-                    "Sunday",
-                    "Monday",
-                    "Tuesday",
-                    "Wednesday",
-                    "Thursday",
-                    "Friday",
-                    "Saturday",
+                  "Sunday",
+                  "Monday",
+                  "Tuesday",
+                  "Wednesday",
+                  "Thursday",
+                  "Friday",
+                  "Saturday",
                 ],
-                slots: [
-                    {
-                        time: String,
-                        isBooked: Boolean,
-                    },
-                ],
-            },
-        ],
+              },
+              slots: [
+                {
+                  time: {
+                    type: String,
+                    match: /^(?:[01]\d|2[0-3]):[0-5]\d$/, // Validates HH:MM 24h format
+                  },
+                  isBooked: {
+                    type: Boolean,
+                    default: false
+                  }
+                }
+              ]
+            }
+          ]
+          
     },
     {
         timestamps: true,
@@ -73,5 +83,11 @@ doctorSchema.statics.hashPassword =  function (password) {
 doctorSchema.methods.validatePassword =  function (password) {
     return bcrypt.compare(password,this.password);
 }
+doctorSchema.pre('save', function (next) {
+    if(!this.availability||this.availability.length===0){
+        this.availability=generateWeeklyAvalability();
+    }
+    next();
+}) 
 const DoctorModel = mongoose.model("Doctor", doctorSchema);
 module.exports = DoctorModel;
