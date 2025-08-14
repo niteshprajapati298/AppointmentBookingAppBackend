@@ -17,12 +17,12 @@ const appointmentSchema = new mongoose.Schema({
         status: {
             type: String,
             required: true,
-            enum: ["Booked", "Finished","Cancelled","Pending"],
+            enum: ["Booked", "Finished","Cancelled"],
         },
         date: {
             day: {
-                type: String,
-                 enum: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+                type: Number,
+                 enum: [0,1,2,3,4,5,6],
                 required:true,
             },
             time: {

@@ -1,5 +1,5 @@
 const DoctorModel = require("../models/doctor.model");
-const bcrypt = require('bcrypt');
+
 const { createDoctor } = require("../services/doctor.service");
 
 module.exports.registerDoctor = async (req, res, next) => {
@@ -52,26 +52,36 @@ module.exports.logoutDoctor = async (req,res,next) => {
     }
 }
 module.exports.getDoctors = async (req, res) => {
-    try {
-      const id = req.params.id;
-  
-      if (id) {
-        const doctor = await DoctorModel.findById(id);
-        if (!doctor) {
-          return res.status(404).json({ message: "Doctor not found" });
-        }
-        return res.status(200).json(doctor);
-      } else {
-        const doctors = await DoctorModel.find();
-        return res.status(200).json(doctors);
-      }
-  
-    } catch (error) {
-      res.status(500).json({ message: error.message });
+  try {
+    const { id } = req.params;
+    if (id) {
+      const doctor = await DoctorModel.findById(id);
+      if (!doctor) return res.status(404).json({ message: "Doctor not found" });
+      return res.status(200).json(doctor);
     }
-  };
+    const doctors = await DoctorModel.find();
+    return res.status(200).json(doctors);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
-module.exports.getDoctorsBySpeciality = async (req,res,next) => {
-    
-}
+
+module.exports.getDoctorsBySpeciality = async (req, res) => {
+  try {
+    const { speciality } = req.query;
+    if (!speciality) return res.status(400).json({ message: "Speciality query is required" });
+
+    const doctors = await DoctorModel.find({
+      speciality: { $regex: speciality, $options: "i" }
+    });
+
+    if (!doctors.length) return res.status(404).json({ message: "No doctors found" });
+
+    res.status(200).json(doctors);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
   

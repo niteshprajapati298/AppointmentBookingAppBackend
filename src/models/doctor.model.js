@@ -40,15 +40,9 @@ const doctorSchema = new mongoose.Schema(
         availability: [
             {
               day: {
-                type: String,
+                type: Number,
                 enum: [
-                  "Sunday",
-                  "Monday",
-                  "Tuesday",
-                  "Wednesday",
-                  "Thursday",
-                  "Friday",
-                  "Saturday",
+                 0,1,2,3,4,5,6
                 ],
               },
               slots: [

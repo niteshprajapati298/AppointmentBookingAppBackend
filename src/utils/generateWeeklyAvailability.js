@@ -1,13 +1,6 @@
 module.exports.generateWeeklyAvalability = function (params) {
     const days = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "wednesday",
-        "Thursday",
-        "Fridayday",
-        "Saturday",
-
+       0,1,2,3,4,5,6
     ];
     const slots =[];
     for(let hour = 9; hour<=17;hour++){
