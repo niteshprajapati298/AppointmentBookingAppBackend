@@ -1,53 +1,94 @@
+const AppointmentModel = require("../models/appointment.model");
 const DoctorModel = require("../models/doctor.model");
-const PatiendModel = require("../models/patient.model");
+const PatientModel = require("../models/patient.model");
 
-// book an appointment
-module.exports.bookAppointment = async (req, res, next) => {
+module.exports.bookAppointment = async (req, res) => {
     try {
-        const { doctorId, patientId, slot } = req.body;
-        // availability = {
-        // day:Number
-        // slots:[
-        //{time:"",isBooked} ,{},{},{},{}
-        //]
-        // },
-        const day = slot.day;
-        const time = slot.time;
+        const { doctorId, patientId, slot, status } = req.body;
+        if (!doctorId || !patientId || !slot || !status) return res.status(400).json("All fields are required");
 
+        const { day, time } = slot;
+        if (day === undefined) return res.status(400).json("Day is required");
+        if (!time) return res.status(400).json("Time is required");
 
-        if (!doctorId || !patientId || !slot) return res.status(400).json("All Fields are required");
-        if (!time) return res.status(400).json("Time is Required")
-        if (!day) return res.status(400).json("Day is Required")
-        const isDoctorExists = await DoctorModel.findById({ _id: doctorId });
-        if (!isDoctorExists) return res.status(400).json("Doctor Does Not Exists");
-        const isPatientExists = await PatiendModel.findById({ _id: isPatientExists });
-        const isSlotAvailable = await DoctorModel.find({
+        const doctor = await DoctorModel.findById(doctorId);
+        if (!doctor) return res.status(400).json("Doctor does not exist");
+        if (doctor.status !== "Active") return res.status(400).json("Doctor is not available");
+
+        const patient = await PatientModel.findById(patientId);
+        if (!patient) return res.status(400).json("Patient does not exist");
+
+        const slotAvailable = await DoctorModel.findOne({
+            _id: doctorId,
             availability: {
-                day: Number,
-                slots: [
-                    { time: time, isBooked: false }
-                ]
+                $elemMatch: {
+                    day: day,
+                    slots: { $elemMatch: { time: time, isBooked: false } }
+                }
             }
         });
-        if (!isSlotAvailable) return res.status(400).json("Selected Slot is Not Available");
-        const appointment = await DoctorModel.create({
-            availability: {
-                day: Number,
-                slots: [
-                    { time: time, isBooked: true }
+
+        if (!slotAvailable) return res.status(400).json("Selected slot is not available");
+
+        await DoctorModel.updateOne(
+            { _id: doctorId },
+            { $set: { "availability.$[day].slots.$[slot].isBooked": true } },
+            {
+                arrayFilters: [
+                    { "day.day": day },
+                    { "slot.time": time }
                 ]
             }
-        })
-        res.status(201).json({
-            message: "Appointment Booked Successfully", details: {
-                doctorId,
-                patientId,
-                bookedSlot
+        );
+
+        const appointment = await AppointmentModel.create({
+            fromPatientId: patientId,
+            toDoctorId: doctorId,
+            appointMentDetails: {
+                status: "Booked",
+                date: { day, time }
             }
-        })
+        });
+
+        res.status(201).json({
+            message: "Appointment booked successfully",
+            details: { appointment }
+        });
 
     } catch (error) {
-        res.status(500).json({ message: error.message })
+        res.status(500).json({ message: error.message });
     }
+};
 
+module.exports.cancelAppointment = async   (req, res) => {
+       try {
+        const { doctorId, patientId, slot, status,appointmentId } = req.body;
+        if (!doctorId || !patientId || !slot || !status||!appointmentId) return res.status(400).json("All fields are required");
+        
+        const doctor = await DoctorModel.findById(doctorId);
+        if (!doctor) return res.status(400).json("Doctor does not exist");
+        if (doctor.status !== "Active") return res.status(400).json("Doctor is not available");
+
+        const patient = await PatientModel.findById(patientId);
+        if (!patient) return res.status(400).json("Patient does not exist");
+
+        const isAppointExists = await AppointmentModel.findById(appointmentId);
+        if(!isAppointExists) return res.status(400).json("Appointment Does not Exists");
+        
+        
+        await DoctorModel.updateOne(
+            { _id: doctorId },
+            { $set: { "availability.$[day].slots.$[slot].isBooked": false } },
+            {
+                arrayFilters: [
+                    { "day.day": day },
+                    { "slot.time": time }
+                ]
+            }
+        );
+        
+       } catch (error) {
+        res.status(500).json({ message: error.message });
+
+       }
 }
