@@ -48,6 +48,7 @@ module.exports.bookAppointment = async (req, res) => {
                 status: "Booked",
                 date: { day, time }
             }
+            
         });
 
         res.status(201).json({
@@ -63,8 +64,8 @@ module.exports.bookAppointment = async (req, res) => {
 module.exports.cancelAppointment = async   (req, res) => {
        try {
         const { doctorId, patientId, slot, status,appointmentId } = req.body;
-        if (!doctorId || !patientId || !slot || !status||!appointmentId) return res.status(400).json("All fields are required");
-        
+        if (!doctorId || !patientId || !slot || !status|| !appointmentId) return res.status(400).json("All fields are required");
+        const {day,time} = slot;
         const doctor = await DoctorModel.findById(doctorId);
         if (!doctor) return res.status(400).json("Doctor does not exist");
         if (doctor.status !== "Active") return res.status(400).json("Doctor is not available");
@@ -80,12 +81,22 @@ module.exports.cancelAppointment = async   (req, res) => {
             { _id: doctorId },
             { $set: { "availability.$[day].slots.$[slot].isBooked": false } },
             {
-                arrayFilters: [
-                    { "day.day": day },
-                    { "slot.time": time }
-                ]
+              arrayFilters: [
+                { "day.day": day },      
+                { "slot.time": time }    
+              ]
             }
-        );
+          );
+          
+        const cancelledAppointment = await AppointmentModel.updateOne(
+            {
+              _id: appointmentId,
+              fromPatientId: patientId,
+              toDoctorId: doctorId
+            },
+            { $set: { "appointMentDetails.status": "Cancelled" } }
+          );
+          res.status(200).json({appomessage:"Appointment Cancelled",cancelledAppointment})
         
        } catch (error) {
         res.status(500).json({ message: error.message });
