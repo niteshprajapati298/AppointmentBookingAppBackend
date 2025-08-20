@@ -1,3 +1,5 @@
+const { request } = require("express");
+const AppointmentModel = require("../models/appointment.model");
 const DoctorModel = require("../models/doctor.model");
 
 const { createDoctor } = require("../services/doctor.service");
@@ -16,6 +18,7 @@ module.exports.registerDoctor = async (req, res, next) => {
     res.status(401).json(error.message)
   }
 }
+
 module.exports.loginDoctor = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -42,6 +45,7 @@ module.exports.getDoctorProfile = async (req, res, next) => {
     return res.status(404).json(error.message, "Internal Server Error")
   }
 }
+
 module.exports.logoutDoctor = async (req, res, next) => {
   try {
     const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
@@ -52,6 +56,7 @@ module.exports.logoutDoctor = async (req, res, next) => {
     res.status(401).json("Internal Server Error");
   }
 }
+
 module.exports.getDoctors = async (req, res) => {
   try {
     const { id } = req.params;
@@ -66,7 +71,6 @@ module.exports.getDoctors = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 module.exports.getDoctorsBySpeciality = async (req, res) => {
   try {
@@ -85,8 +89,6 @@ module.exports.getDoctorsBySpeciality = async (req, res) => {
   }
 };
 
-
-
 module.exports.updateDoctorAvailability = async (req, res) => {
   try {
     const { status } = req.body;
@@ -97,10 +99,10 @@ module.exports.updateDoctorAvailability = async (req, res) => {
     const doctor = await DoctorModel.findByIdAndUpdate(
       doctorId,
       { status: status },
-      {new:true}
+      { new: true }
     );
     return res.status(200).json({
-      message:"Status Update Successfully",
+      message: "Status Update Successfully",
       doctor
     })
 
@@ -108,5 +110,64 @@ module.exports.updateDoctorAvailability = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 }
+
+
+//get all appointmensts with doctor which is booked 
+
+module.exports.getAllAppointmentsByDoctorId = async (req, res) => {
+  try {
+    const currentDay = new Date().getDay();
+    const doctorId = req.doctor._id;
+    if (!doctorId) return res.status(400).json("UnAuthorized");
+    const appointments = await AppointmentModel.find(
+      {
+        toDoctorId: doctorId,
+        "appointMentDetails.date.day": currentDay
+      }
+    )
+    if (appointments.length === 0) return res.status(200).json("No Appointments found for today");
+    res.status(200).json({ message: "Today Appointments", appointments });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
+module.exports.cancelAppointmentById = async (req, res) => {
+  try {
+    const doctorId = req.doctor._id;
+    const appointmentId = req.params.id; 
+
+    if (!doctorId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (!appointmentId) {
+      return res.status(400).json({ message: "Please provide the Appointment Id" });
+    }
+
+    const cancelledAppointment = await AppointmentModel.findOneAndUpdate(
+      {
+        _id: appointmentId,
+        toDoctorId: doctorId, 
+        "appointMentDetails.status": "Booked"
+      },
+      { $set: { "appointMentDetails.status": "Cancelled By Doctor" } },
+      { new: true }
+    );
+
+    if (!cancelledAppointment) {
+      return res.status(400).json({ message: "You can't cancel this appointment (either not found or already cancelled)" });
+    }
+
+    res.status(200).json({
+      message: "Appointment cancelled successfully",
+      cancelledAppointment
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 
