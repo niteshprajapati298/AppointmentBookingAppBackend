@@ -17,7 +17,7 @@ MediLink is a web application that connects patients with doctors by enabling **
 ## 🛠️ Tech Stack
 
 **Backend:** Node.js, Express.js, MongoDB, JWT, Bcrypt
-**Frontend:** React (or your chosen stack)
+**Frontend:** React 
 **Other Tools:** Mongoose, Cron Jobs (for auto-cancellation of expired appointments)
 
 ---
