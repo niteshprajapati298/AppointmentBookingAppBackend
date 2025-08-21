@@ -152,8 +152,8 @@ Use **Postman / Thunder Client** with sample requests:
 
 ## 👨‍💻 Contributors
 
-* **Your Name** (Backend Developer)
-* (Frontend Dev Placeholder)
+* **Nitesh Prajapati** (Backend Developer)
+* **Nitesh Prajapati** (Frontend Developer)
 
 ---
 
