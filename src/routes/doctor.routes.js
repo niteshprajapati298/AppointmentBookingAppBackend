@@ -1,6 +1,6 @@
 
 const express = require('express');
-const { registerDoctor, loginDoctor, getDoctorProfile, logoutDoctor, updateDoctorAvailability, getAllAppointmentsByDoctorId, cancelAppointmentById } = require('../controllers/doctor.controller');
+const { registerDoctor, loginDoctor, getDoctorProfile, logoutDoctor, updateDoctorAvailability, getAllAppointmentsByDoctorId, cancelAppointmentById, getAllAppointmentbyId } = require('../controllers/doctor.controller');
 const { authDoctor } = require('../middlewares/auth.middleware');
 const router = express.Router();
 router.post('/signup',registerDoctor);
@@ -9,6 +9,7 @@ router.get('/profileView',authDoctor,getDoctorProfile);
 router.post('/logout',authDoctor,logoutDoctor);
 router.patch("/availability", authDoctor, updateDoctorAvailability);
 router.get('/appointments',authDoctor,getAllAppointmentsByDoctorId);
+router.get('/appointments/:id',authDoctor,getAllAppointmentbyId);
 router.patch(
   "/appointment/:id/cancel",
   authDoctor,

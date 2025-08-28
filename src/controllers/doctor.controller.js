@@ -133,6 +133,27 @@ module.exports.getAllAppointmentsByDoctorId = async (req, res) => {
   }
 }
 
+module.exports.getAllAppointmentbyId = async (req, res) => {
+  try {
+    const currentDay = new Date().getDay();
+    const doctorId = req.doctor._id;
+    const appointmentId = req.params.id;
+    if (!doctorId) return res.status(400).json("UnAuthorized");
+    const appointments = await AppointmentModel.find(
+      {
+        _id:appointmentId,
+        toDoctorId: doctorId,
+        "appointMentDetails.date.day": currentDay
+      }
+    )
+    if (appointments.length === 0) return res.status(200).json("No Appointments found for today");
+    res.status(200).json({ message: "Appointment", appointments });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
 module.exports.cancelAppointmentById = async (req, res) => {
   try {
     const doctorId = req.doctor._id;
